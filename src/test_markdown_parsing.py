@@ -1,7 +1,9 @@
 import unittest
 from textnode import TextNode
 from textnode import TextType
-from splitter import split_nodes_delimiter
+from markdown_parsing import split_nodes_delimiter
+from markdown_parsing import extract_markdown_links
+from markdown_parsing import extract_markdown_images
 
 class TestSplitter(unittest.TestCase):
     def test_split_nodes_delimiter_code(self):
@@ -70,3 +72,31 @@ class TestSplitter(unittest.TestCase):
     def test_split_nodes_delimiter_invalid(self):
         node = TextNode("This is text with a _italic block word", TextType.PLAIN)
         self.assertRaises(ValueError, split_nodes_delimiter, [node], "_", TextType.ITALIC)
+
+    def test_extract_markdown_links(self):
+        text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+        links = extract_markdown_links(text)
+        self.assertEqual(links, [("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")])
+
+    def test_extract_markdown_links_empty(self):
+        text = ""
+        links = extract_markdown_links(text)
+        self.assertEqual(links, [])
+
+    def test_extract_markdown_links_none(self):
+        links = extract_markdown_links(None)
+        self.assertEqual(links, [])
+
+    def test_extract_markdown_images(self):
+        text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        images = extract_markdown_images(text)
+        self.assertEqual(images, [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")])
+
+    def test_extract_markdown_images_empty(self):
+        text = ""
+        images = extract_markdown_images(text)
+        self.assertEqual(images, [])
+
+    def test_extract_markdown_images_none(self):
+        images = extract_markdown_images(None)
+        self.assertEqual(images, [])
