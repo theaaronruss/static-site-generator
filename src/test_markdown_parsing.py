@@ -7,6 +7,7 @@ from markdown_parsing import split_nodes_image
 from markdown_parsing import split_nodes_link
 from markdown_parsing import extract_markdown_links
 from markdown_parsing import extract_markdown_images
+from markdown_parsing import markdown_to_blocks
 
 class TestSplitter(unittest.TestCase):
     def test_split_nodes_delimiter_code(self):
@@ -194,3 +195,23 @@ class TestSplitter(unittest.TestCase):
             ],
             nodes,
         )
+
+        def test_markdown_to_blocks(self):
+            md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+            blocks = markdown_to_blocks(md)
+            self.assertEqual(
+                blocks,
+                [
+                    "This is **bolded** paragraph",
+                    "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                    "- This is a list\n- with items",
+                ],
+            )
