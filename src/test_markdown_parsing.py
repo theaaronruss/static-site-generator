@@ -1,6 +1,7 @@
 import unittest
 from textnode import TextNode
 from textnode import TextType
+from markdown_parsing import text_to_textnodes
 from markdown_parsing import split_nodes_delimiter
 from markdown_parsing import split_nodes_image
 from markdown_parsing import split_nodes_link
@@ -65,10 +66,6 @@ class TestSplitter(unittest.TestCase):
 
     def test_split_nodes_delimiter_empty(self):
         new_nodes = split_nodes_delimiter([], "**", TextType.BOLD)
-        self.assertEqual(new_nodes, [])
-
-    def test_split_nodes_delimiter_none(self):
-        new_nodes = split_nodes_delimiter(None, "**", TextType.BOLD)
         self.assertEqual(new_nodes, [])
 
     def test_split_nodes_delimiter_invalid(self):
@@ -163,4 +160,37 @@ class TestSplitter(unittest.TestCase):
                 TextNode(" with text that follows", TextType.PLAIN),
             ],
             new_nodes,
+        )
+
+    def test_delim_bold_and_italic(self):
+        node = TextNode("**bold** and _italic_", TextType.PLAIN)
+        new_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+        new_nodes = split_nodes_delimiter(new_nodes, "_", TextType.ITALIC)
+        self.assertEqual(
+            [
+                TextNode("bold", TextType.BOLD),
+                TextNode(" and ", TextType.PLAIN),
+                TextNode("italic", TextType.ITALIC),
+            ],
+            new_nodes,
+        )
+
+    def test_text_to_textnodes(self):
+        nodes = text_to_textnodes(
+            "This is **text** with an _italic_ word and a `code block` and an ![image](https://i.imgur.com/zjjcJKZ.png) and a [link](https://boot.dev)"
+        )
+        self.assertListEqual(
+            [
+                TextNode("This is ", TextType.PLAIN),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.PLAIN),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.PLAIN),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.PLAIN),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and a ", TextType.PLAIN),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+            ],
+            nodes,
         )

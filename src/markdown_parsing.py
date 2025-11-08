@@ -2,23 +2,33 @@ import re
 
 from textnode import TextNode, TextType
 
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.PLAIN)]
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    return nodes
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
-    if old_nodes is None or len(old_nodes) == 0:
-        return []
     new_nodes = []
     for old_node in old_nodes:
-        parts = old_node.text.split(delimiter)
-
-        if len(parts) % 2 != 1:
-            raise ValueError("invalid markdown syntax")
-
-        for i in range(0, len(parts)):
-            node = None
+        if old_node.text_type != TextType.PLAIN:
+            new_nodes.append(old_node)
+            continue
+        split_nodes = []
+        sections = old_node.text.split(delimiter)
+        if len(sections) % 2 == 0:
+            raise ValueError("invalid markdown, formatted section not closed")
+        for i in range(len(sections)):
+            if sections[i] == "":
+                continue
             if i % 2 == 0:
-                node = TextNode(parts[i], TextType.PLAIN)
+                split_nodes.append(TextNode(sections[i], TextType.PLAIN))
             else:
-                node = TextNode(parts[i], text_type)
-            new_nodes.append(node)
+                split_nodes.append(TextNode(sections[i], text_type))
+        new_nodes.extend(split_nodes)
     return new_nodes
 
 def split_nodes_image(old_nodes):
